@@ -1,0 +1,21 @@
+Goal: implement Fourier transform
+
+I also want to map elements in a Fourier transform output to specific
+frequencies. I want to implement Fourier transform such that I can run it on
+real time audio and determine dominant frequency components and plot them.
+
+$$X_k = \sum_{n=0}^{N-1} x_n \cdot e^{-\frac{i2\pi}{N}kn}$$
+
+Clearly this can be done as a matrix multiply with a constant coefficient
+matrix. $k$ is a parameter here. The larger $k$ is, the faster the signal is
+wound about the circle.
+
+$i2\pi$ in the numerator results in [0, 1] being mapped onto the unit
+circle. With $k = 1$, we are mapping the entire input sequence onto the unit
+circle, wrapping around once. With $k = 2$ we wrap around twice.
+If we have a 1Hz signal of length N, $k = 1$ highlights signals of frequency N
+Hz. $k = 2$ wraps around twice, so we highlight components with frequency 64
+Hz.
+
+Alright, I have a function that computes complex exponent. I now can compute a
+matrix of Fourier coefficients.
