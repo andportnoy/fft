@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -38,15 +39,15 @@ void cmprint(double complex *m, int n) {
 }
 
 double complex *fourier_matrix(int n) {
-	double complex (*fm)[n] = malloc(n*n*sizeof *fm);
+	double complex (*fm)[n] = malloc(n*sizeof *fm);
 	for (int k=0; k<n; ++k) /* every row corresponds to a given k */
 	for (int j=0; j<n; ++j) {
-		fm[k][j] = cexpo(-2*M_PI*I*k*j/(double)n);
+		fm[k][j] = cexpo(-2*M_PI*I*k*j/n);
 	}
 	return (double complex *)fm;
 }
 
-void matvec(double complex *m, double *x, double complex *y, int n) {
+void matvec(const double complex * restrict m, const double * restrict x, double complex * restrict y, int n) {
 	double complex (*mat)[n] = (double complex (*)[])m;
 	for (int i=0; i<n; ++i) {
 		y[i] = 0;
@@ -56,7 +57,7 @@ void matvec(double complex *m, double *x, double complex *y, int n) {
 	}
 }
 
-void dft(double complex *fm, double *x, double complex *y, int n) {
+void dft(const double complex * restrict fm, const double * restrict x, double complex * restrict y, int n) {
 	matvec(fm, x, y, n);
 }
 
@@ -75,6 +76,20 @@ int dread(FILE *f, double **x) {
 	return n;
 }
 
+double msdiff(void) {
+	static struct timespec cur, prev;
+	static int initialized = 0;
+	if (!initialized++) {
+		clock_gettime(CLOCK_MONOTONIC, &prev);
+		return 0;
+	}
+	clock_gettime(CLOCK_MONOTONIC, &cur);
+	double ms = (cur.tv_sec - prev.tv_sec) * 1000
+	          + (cur.tv_nsec - prev.tv_nsec) / 1e6;
+	prev = cur;
+	return ms;
+}
+
 int main(int argc, char **argv) {
 	factorial_initialize();
 
@@ -82,14 +97,26 @@ int main(int argc, char **argv) {
 
 	char *in = argv[1];
 	FILE *fi = fopen(in, "r");
+#if 0
 	double *x;
 	int n = dread(fi, &x);
+#else
 	fclose(fi);
+	int n = 2048;
+	double *x = malloc(n * sizeof *x);
+#endif
 
-	double complex *y =  malloc(n * sizeof *y);
+	double complex *y = malloc(n * sizeof *y);
 	double complex *fm = fourier_matrix(n);
 
-	dft(fm, x, y, n);
+	double max = 0.;
+	for (;;) {
+		dft(fm, x, y, n);
+		double ms = msdiff();
+		max = max<ms? ms: max;
+		printf("%f %f ms\n", ms, max);
+	}
+
 	char *out = argv[2];
 	FILE *fo = fopen(out, "w");
 	fwrite(y, n*sizeof*y, 1, fo);

@@ -1,4 +1,4 @@
-CFLAGS=-std=gnu99 -O3 -Wall -Wextra -march=native
+CFLAGS=-std=gnu99 -O3 -Wall -Wextra -march=native -flto
 LDFLAGS=-lm
 
 fourier:
