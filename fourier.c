@@ -1,10 +1,3 @@
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-#include <complex.h>
-
 #define FACTN 64
 
 static double factorial[FACTN] = {1};
