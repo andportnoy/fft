@@ -7,8 +7,8 @@ all: $(PROG)
 
 fourier: audio.o
 fourier: INCLUDE += audio.h
-fourier: LDFLAGS += -lm
-audio.o: INCLUDe += portaudio.h
+fourier: LDFLAGS += -lm -lportaudio
+audio.o: INCLUDE += portaudio.h
 
 clean:
 	rm -rf $(PROG) audio.o

@@ -1,8 +1,8 @@
 #include <portaudio.h>
 
 #define PAFORMAT paFloat32
-#define SRATE 44100
-#define NFRAMES 512
+#define SRATE 48000
+#define NFRAMES 1024
 
 #define pacheck(err, msg) { \
 	PaError e = err; \

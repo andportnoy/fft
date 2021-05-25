@@ -83,7 +83,29 @@ double msdiff(void) {
 	return ms;
 }
 
-int main(int argc, char **argv) {
+int main() {
+	audio_initialize();
+	devprint();
+	int nchunks = SRATE/NFRAMES + 1;
+	patype *data;
+	size_t chunksize = NFRAMES * sizeof *data;
+	printf("nchunks=%d, chunksize=%d, SRATE=%d, NFRAMES=%d, sizeof (patype)=%d\n",
+	        nchunks,    chunksize,    SRATE,    NFRAMES,    sizeof (patype));
+	data = calloc(nchunks, chunksize);
+	printf("allocated [%p, %p) of size %d\n", data, data+nchunks*chunksize, nchunks*chunksize);
+	for (int i=0; i<nchunks; ++i) {
+		patype *chunk = audio_record();
+		memcpy(data+NFRAMES*i, chunk, chunksize);
+		printf("took %f ms\n", msdiff());
+	}
+	puts("done recording"); fflush(stdout);
+	for (int i=0; i<nchunks; ++i) {
+		audio_play(data+NFRAMES*i);
+	}
+	audio_terminate();
+}
+
+int main2(int argc, char **argv) {
 	factorial_initialize();
 
 	assert(argc == 3);
