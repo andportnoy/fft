@@ -54,6 +54,11 @@ void dft(const float complex * restrict fm, const float * restrict x, float comp
 	matvec(fm, x, y, n);
 }
 
+void magnitude(const float complex * restrict x, float * restrict y, int n) {
+	for (int i=0; i<n; ++i)
+		y[i] = cabsf(x[i]);
+}
+
 int dread(FILE *f, float **x) {
 	fseek(f, 0, SEEK_END);
 	int b = ftell(f);
@@ -87,11 +92,14 @@ int main() {
 	audio_initialize();
 	float complex *fm = fourier_matrix(NFRAMES);
 	float complex *y = malloc(NFRAMES * sizeof *y);
+	float *mag = malloc(NFRAMES * sizeof *mag);
 	for (;;) {
 		patype *chunk = audio_record();
-		printf("record: %f ms, ", msdiff());
 		dft(fm, chunk, y, NFRAMES);
-		printf("DFT: %f ms\n", msdiff());
+		magnitude(y, mag, NFRAMES);
+		for (int i=0; i<80; ++i)
+			printf(mag[i]>5? "#": " ");
+		printf("\n");
 	}
 	audio_terminate();
 }
