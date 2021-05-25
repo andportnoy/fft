@@ -1,36 +1,3 @@
-#define FACTN 64
-
-static float factorial[FACTN] = {1};
-void factorial_initialize(void) {
-	for (int i=1, n=FACTN; i<n; ++i)
-		factorial[i] = factorial[i-1]*i;
-}
-
-float complex cexpo(float complex x) {
-	float complex res = 0, num = 1;
-	for (int i=0, n=FACTN; i<n; ++i) {
-		res += num/factorial[i];
-		num *= x;
-	}
-	return res;
-}
-
-void cprint(float complex x) {
-	printf("%f + %fi", crealf(x), cimagf(x));
-}
-
-void cmprint(float complex *m, int n) {
-	float complex (*mat)[n] = (float complex (*)[n])m;
-	for (int i=0; i<n; ++i) {
-		for (int j=0; j<n; ++j) {
-			if (j)
-				printf(" ");
-			printf("%+.2f%+.fi", crealf(mat[i][j]), cimagf(mat[i][j]));
-		}
-		printf("\n");
-	}
-}
-
 float complex *fourier_matrix(int n) {
 	float complex (*fm)[n] = malloc(n*sizeof *fm);
 	for (int k=0; k<n; ++k) /* every row corresponds to a given k */
@@ -59,21 +26,6 @@ void magnitude(const float complex * restrict x, float * restrict y, int n) {
 		y[i] = cabsf(x[i]);
 }
 
-int dread(FILE *f, float **x) {
-	fseek(f, 0, SEEK_END);
-	int b = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	assert(b%sizeof (float) == 0);
-	int n = b / sizeof (float);
-
-	float *xx = malloc(n * sizeof *xx);
-	fread(xx, n*sizeof*xx, 1, f);
-	*x = xx;
-
-	return n;
-}
-
 double msdiff(void) {
 	static struct timespec cur, prev;
 	static int initialized = 0;
@@ -98,41 +50,8 @@ int main() {
 		dft(fm, chunk, y, NFRAMES);
 		magnitude(y, mag, NFRAMES);
 		for (int i=0; i<80; ++i)
-			printf(mag[i]>5? "#": " ");
+			printf(mag[i]>10? "#": " ");
 		printf("\n");
 	}
 	audio_terminate();
-}
-
-int main2(int argc, char **argv) {
-	factorial_initialize();
-
-	assert(argc == 3);
-
-	char *in = argv[1];
-	FILE *fi = fopen(in, "r");
-#if 0
-	float *x;
-	int n = dread(fi, &x);
-#else
-	fclose(fi);
-	int n = 2048;
-	float *x = malloc(n * sizeof *x);
-#endif
-
-	float complex *y = malloc(n * sizeof *y);
-	float complex *fm = fourier_matrix(n);
-
-	double max = 0.;
-	for (;;) {
-		dft(fm, x, y, n);
-		double ms = msdiff();
-		max = max<ms? ms: max;
-		printf("%f %f ms\n", ms, max);
-	}
-
-	char *out = argv[2];
-	FILE *fo = fopen(out, "w");
-	fwrite(y, n*sizeof*y, 1, fo);
-	fclose(fo);
 }
