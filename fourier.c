@@ -1,13 +1,13 @@
 #define FACTN 64
 
-static double factorial[FACTN] = {1};
+static float factorial[FACTN] = {1};
 void factorial_initialize(void) {
 	for (int i=1, n=FACTN; i<n; ++i)
 		factorial[i] = factorial[i-1]*i;
 }
 
-double complex cexpo(double complex x) {
-	double complex res = 0, num = 1;
+float complex cexpo(float complex x) {
+	float complex res = 0, num = 1;
 	for (int i=0, n=FACTN; i<n; ++i) {
 		res += num/factorial[i];
 		num *= x;
@@ -15,33 +15,33 @@ double complex cexpo(double complex x) {
 	return res;
 }
 
-void cprint(double complex x) {
-	printf("%f + %fi", creal(x), cimag(x));
+void cprint(float complex x) {
+	printf("%f + %fi", crealf(x), cimagf(x));
 }
 
-void cmprint(double complex *m, int n) {
-	double complex (*mat)[n] = (double complex (*)[n])m;
+void cmprint(float complex *m, int n) {
+	float complex (*mat)[n] = (float complex (*)[n])m;
 	for (int i=0; i<n; ++i) {
 		for (int j=0; j<n; ++j) {
 			if (j)
 				printf(" ");
-			printf("%+.2f%+.fi", creal(mat[i][j]), cimag(mat[i][j]));
+			printf("%+.2f%+.fi", crealf(mat[i][j]), cimagf(mat[i][j]));
 		}
 		printf("\n");
 	}
 }
 
-double complex *fourier_matrix(int n) {
-	double complex (*fm)[n] = malloc(n*sizeof *fm);
+float complex *fourier_matrix(int n) {
+	float complex (*fm)[n] = malloc(n*sizeof *fm);
 	for (int k=0; k<n; ++k) /* every row corresponds to a given k */
 	for (int j=0; j<n; ++j) {
-		fm[k][j] = cexpo(-2*M_PI*I*k*j/n);
+		fm[k][j] = cexpf(-2*M_PI*I*k*j/n);
 	}
-	return (double complex *)fm;
+	return (float complex *)fm;
 }
 
-void matvec(const double complex * restrict m, const double * restrict x, double complex * restrict y, int n) {
-	double complex (*mat)[n] = (double complex (*)[])m;
+void matvec(const float complex * restrict m, const float * restrict x, float complex * restrict y, int n) {
+	float complex (*mat)[n] = (float complex (*)[])m;
 	for (int i=0; i<n; ++i) {
 		y[i] = 0;
 		for (int j=0; j<n; ++j) {
@@ -50,19 +50,19 @@ void matvec(const double complex * restrict m, const double * restrict x, double
 	}
 }
 
-void dft(const double complex * restrict fm, const double * restrict x, double complex * restrict y, int n) {
+void dft(const float complex * restrict fm, const float * restrict x, float complex * restrict y, int n) {
 	matvec(fm, x, y, n);
 }
 
-int dread(FILE *f, double **x) {
+int dread(FILE *f, float **x) {
 	fseek(f, 0, SEEK_END);
 	int b = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
-	assert(b%sizeof (double) == 0);
-	int n = b / sizeof (double);
+	assert(b%sizeof (float) == 0);
+	int n = b / sizeof (float);
 
-	double *xx = malloc(n * sizeof *xx);
+	float *xx = malloc(n * sizeof *xx);
 	fread(xx, n*sizeof*xx, 1, f);
 	*x = xx;
 
@@ -85,9 +85,13 @@ double msdiff(void) {
 
 int main() {
 	audio_initialize();
+	float complex *fm = fourier_matrix(NFRAMES);
+	float complex *y = malloc(NFRAMES * sizeof *y);
 	for (;;) {
 		patype *chunk = audio_record();
-		printf("took %f ms\n", msdiff());
+		printf("record: %f ms, ", msdiff());
+		dft(fm, chunk, y, NFRAMES);
+		printf("DFT: %f ms\n", msdiff());
 	}
 	audio_terminate();
 }
@@ -100,16 +104,16 @@ int main2(int argc, char **argv) {
 	char *in = argv[1];
 	FILE *fi = fopen(in, "r");
 #if 0
-	double *x;
+	float *x;
 	int n = dread(fi, &x);
 #else
 	fclose(fi);
 	int n = 2048;
-	double *x = malloc(n * sizeof *x);
+	float *x = malloc(n * sizeof *x);
 #endif
 
-	double complex *y = malloc(n * sizeof *y);
-	double complex *fm = fourier_matrix(n);
+	float complex *y = malloc(n * sizeof *y);
+	float complex *fm = fourier_matrix(n);
 
 	double max = 0.;
 	for (;;) {
