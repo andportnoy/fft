@@ -1,14 +1,17 @@
 CFLAGS += -std=gnu99 -O3 -Wall -Wextra -march=native -flto
 CFLAGS += $(INCLUDE:%=-include %)
 
-PROG=fourier
+PROG=spectrogram record play compress fouriertest
 INCLUDE=common.h
 all: $(PROG)
 
-fourier: audio.o
-fourier: INCLUDE += audio.h
-fourier: LDFLAGS += -lm -lportaudio
+fouriertest compress spectrogram: fourier.o
+fouriertest compress spectrogram: INCLUDE += fourier.h
+
+$(PROG): audio.o utils.o
+$(PROG): INCLUDE += audio.h utils.h
+$(PROG): LDFLAGS += -lm -lportaudio
 audio.o: INCLUDE += portaudio.h
 
 clean:
-	rm -rf $(PROG) audio.o
+	rm -rf $(PROG) *.o
