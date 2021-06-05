@@ -73,6 +73,43 @@ void idft(const float complex * restrict ifm, const float complex * restrict x, 
 	}
 }
 
+void recursive_fft(float * restrict a, float * restrict ap, float complex * restrict y, int n) {
+	if (n==1) {
+		y[0] = a[0];
+		return;
+	}
+	int m = n/2;
+	for (int i=0; i<m; ++i) {
+		ap[  i] = a[2*i  ];
+		ap[m+i] = a[2*i+1];
+	}
+	recursive_fft(ap,   a,   y,   m);
+	recursive_fft(ap+m, a+m, y+m, m);
+
+	float complex w = 1, wn=cexpf(-2*M_PI*I/(float)n);
+
+	for (int i=0; i<m; ++i) {
+		float complex
+		  y0  = y[  i],
+		  y1  = y[m+i],
+		  t   = w * y1;
+
+		y[i]   = y0 + t;
+		y[m+i] = y0 - t;
+
+		w *= wn;
+	}
+}
+
+void fft(const float * restrict a, float complex * restrict y, int n) {
+	float *ap = malloc(n * sizeof*ap);
+	float *ac = malloc(n * sizeof*ac);
+	memcpy(ac, a, n*sizeof*a);
+	recursive_fft(ac, ap, y, n);
+	free(ap);
+	free(ac);
+}
+
 void magnitude(const float complex * restrict x, float * restrict y, int n) {
 	for (int i=0; i<n; ++i)
 		y[i] = cabsf(x[i]);

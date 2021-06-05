@@ -1,25 +1,26 @@
 int main(void) {
-	int n = 10;
+	int n = 32;
 
-	float complex (*fm)[n] = (float complex (*)[])fourier_matrix(n); 
-	float complex (*ifm)[n] = (float complex (*)[])inverse_fourier_matrix(n);
+	float complex *fm = fourier_matrix(n);
 
-	float complex (*out)[n] = malloc(n*sizeof *out);
+	float *input = malloc(n * sizeof*input);
+	float complex *output_naive = malloc(n * sizeof*output_naive);
+	float complex *output_fft = malloc(n * sizeof*output_fft);
 
 	for (int i=0; i<n; ++i)
-	for (int j=0; j<n; ++j) {
-		out[i][j] = 0;
-		for (int k=0; k<n; ++k) {
-			out[i][j] += fm[i][k] * ifm[k][j];
-		}
-	}
+		input[i] = (float)rand()/RAND_MAX;
 
-	for (int i=0; i<n; ++i) {
-		for (int j=0; j<n; ++j) {
-			if (j)
-				printf(" ");
-			printf("%+6.2f%+6.2f", crealf(out[i][j]), cimagf(out[i][j]));
-		}
-		printf("\n");
-	}
+	dft(fm, input, output_naive, n, n);
+	fft(input, output_fft, n);
+
+	printf("naive:");
+	for (int i=0; i<n; ++i)
+		printf(" %+6.2f%+6.2f",
+		  crealf(output_naive[i]), cimagf(output_naive[i]));
+	printf("\n");
+	printf("fft  :");
+	for (int i=0; i<n; ++i)
+		printf(" %+6.2f%+6.2f",
+		  crealf(output_fft[i]), cimagf(output_fft[i]));
+	printf("\n");
 }

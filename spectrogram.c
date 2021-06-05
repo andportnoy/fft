@@ -1,35 +1,32 @@
 int main() {
 	audio_initialize();
-	int m = 160;
-	float freq[m];
-	for (int i=0; i<m; ++i)
-		freq[i] = i*16;
-	float complex *fm = fourier_matrix_custom(freq, m, NFRAMES, SRATE);
-	float complex *y = malloc(m * sizeof *y);
-	float *mag = malloc(m * sizeof *mag);
+	float complex *y = malloc(NFRAMES * sizeof *y);
+	float *mag = malloc(NFRAMES * sizeof *mag);
 	for (;;) {
 		patype *chunk = audio_record();
-		dft(fm, chunk, y, m, NFRAMES);
-		magnitude(y, mag, m);
+		msdiff();
+		fft(chunk, y, NFRAMES);
+		double ms = msdiff();
+		magnitude(y, mag, NFRAMES);
 #if 1
-		for (int i=0; i<m; ++i) {
+		for (int i=0; i<160; ++i) {
 			//printf("%2.0f", mag[i]);
-			printf(mag[i]>30? "#": " ");
+			printf(mag[i]>10? "#": " ");
 		}
 #else
 		int imax = -1;
 		float max = 0;
-		for (int i=0; i<m; ++i) {
+		for (int i=0; i<160; ++i) {
 			if (mag[i] > max) {
 				max = mag[i];
 				imax = i;
 			}
 		}
-		for (int i=0; i<m; ++i) {
+		for (int i=0; i<160; ++i) {
 			printf(i==imax? "#": " ");
 		}
-		printf("%6.2f Hz", freq[imax]);
 #endif
+		printf("%.2f ms", ms);
 		printf("\n");
 	}
 	audio_terminate();

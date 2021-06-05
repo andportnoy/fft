@@ -23,4 +23,8 @@ void idft(
 	int n
 );
 
+void fft(const float * restrict x, float complex * restrict y, int n);
+
 void magnitude(const float complex * restrict x, float * restrict y, int n);
+
+double msdiff(void);

@@ -1,12 +1,12 @@
 CFLAGS += -std=gnu99 -O3 -Wall -Wextra -march=native -flto
 CFLAGS += $(INCLUDE:%=-include %)
 
-PROG=spectrogram record play compress fouriertest
+PROG=spectrogram record play compress fouriertest fourierbench
 INCLUDE=common.h
 all: $(PROG)
 
-fouriertest compress spectrogram: fourier.o
-fouriertest compress spectrogram: INCLUDE += fourier.h
+fourierbench fouriertest compress spectrogram: fourier.o
+fourierbench fouriertest compress spectrogram: INCLUDE += fourier.h
 
 $(PROG): audio.o utils.o
 $(PROG): INCLUDE += audio.h utils.h
